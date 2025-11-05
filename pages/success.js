@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+"use client";
+import React, { useEffect } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 export default function Success() {
   const router = useRouter();
@@ -12,80 +14,62 @@ export default function Success() {
   }, [router]);
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center px-6 py-20 bg-[var(--neutral)] text-center">
-      <div className="p-10 rounded-2xl shadow-lg bg-white fade-in max-w-md w-full">
-        <div className="success-circle mb-6 mx-auto"></div>
-        <h1 className="text-3xl font-bold text-[var(--primary)] mb-2">
-          Payment Successful 🎉
+    <main
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-20 text-center"
+      style={{
+        background: "linear-gradient(135deg, #006D77 0%, #F7F3EB 100%)",
+      }}
+    >
+      <div className="max-w-md w-full bg-[rgba(255,255,255,0.95)] backdrop-blur-md shadow-2xl rounded-2xl p-8 border border-[#B08D57]/40">
+        <div className="mx-auto mb-4 w-20 h-20 rounded-full bg-[#B08D57] flex items-center justify-center">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-10 h-10 text-white"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            strokeWidth={1.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        </div>
+
+        <h1 className="text-2xl font-bold" style={{ color: "#006D77" }}>
+          Payment Successful
         </h1>
-        <p className="text-gray-600 mb-6">
-          Thank you for your payment! Your transaction was completed successfully.
+
+        <p className="mt-3 text-sm text-[#7E837D]">
+          Thank you — your payment was processed successfully.
         </p>
-        <button
-          onClick={() => router.push("/")}
-          className="px-6 py-3 rounded-lg bg-[var(--accent)] text-white font-semibold hover:bg-[var(--primary)] transition-all"
-        >
-          Return to Home
-        </button>
-        <p className="text-sm text-gray-500 mt-4">
-          Redirecting automatically in a few seconds...
-        </p>
+
+        <div className="mt-6 flex gap-3 justify-center">
+          <Link
+            href="/"
+            className="px-4 py-2 bg-white text-[#006D77] border border-[#B08D57]/30 rounded-full hover:underline"
+          >
+            Back Home
+          </Link>
+          <Link
+            href="/payment"
+            className="px-4 py-2 bg-[#B08D57] text-white rounded-full hover:opacity-90"
+          >
+            Make another payment
+          </Link>
+        </div>
+
+        <p className="text-sm text-gray-500 mt-4">Redirecting automatically in a few seconds...</p>
+
+        <div className="mt-8 text-xs text-[#7E837D]">
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-[#B08D57] rounded-full animate-ping"></div>
+            <span>100% Secure Checkout — SSL Encrypted & Verified</span>
+          </div>
+        </div>
       </div>
-
-      <style jsx>{`
-        :root {
-          --primary: #006d77;
-          --accent: #d4a373;
-          --neutral: #f7f3eb;
-          --highlight: #ff6b6b;
-        }
-
-        .fade-in {
-          opacity: 0;
-          animation: fadeIn 0.8s ease forwards;
-        }
-
-        @keyframes fadeIn {
-          to {
-            opacity: 1;
-          }
-        }
-
-        .success-circle {
-          width: 90px;
-          height: 90px;
-          border-radius: 50%;
-          background: var(--accent);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          position: relative;
-        }
-
-        .success-circle::after {
-          content: "";
-          width: 40px;
-          height: 20px;
-          border-left: 4px solid white;
-          border-bottom: 4px solid white;
-          transform: rotate(-45deg);
-          position: absolute;
-          animation: drawCheck 0.6s ease forwards 0.3s;
-          opacity: 0;
-        }
-
-        @keyframes drawCheck {
-          0% {
-            transform: scale(0.5) rotate(-45deg);
-            opacity: 0;
-          }
-          100% {
-            transform: scale(1) rotate(-45deg);
-            opacity: 1;
-          }
-        }
-      `}</style>
     </main>
   );
 }
-

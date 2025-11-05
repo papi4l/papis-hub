@@ -1,3 +1,4 @@
+// ...existing code...
 "use client";
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
@@ -12,7 +13,7 @@ const PaystackButton = dynamic(
 export default function Payment() {
   const publicKey = "pk_live_11d6dca05a321327a1bc8ba683255504c9aeada7"; // live key
   const [email, setEmail] = useState(""); // user must fill
-  const [amount, setAmount] = useState(250);
+  const [amount, setAmount] = useState(250); // fixed capitalization
   const [name, setName] = useState("");
   const [service, setService] = useState("Graphic Design");
 
@@ -29,15 +30,19 @@ export default function Payment() {
     setAmount(selected ? selected.price : 250);
   }, [service]);
 
+  // ...existing code...
   const componentProps = {
     email,
     amount: amount * 100, // amount in kobo
     metadata: { name, service },
     publicKey,
-    text: Pay ₵${amount},
-    onSuccess: () => alert("Payment successful!"),
+    text: `Pay ₵${amount}`,
+    onSuccess: () => {
+      window.location.href = "/success"; // redirect after success
+    },
     onClose: () => alert("Payment cancelled."),
   };
+  // ...existing code...
 
   return (
     <div
