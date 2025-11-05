@@ -10,21 +10,11 @@ const PaystackButton = dynamic(
 );
 
 export default function Payment() {
-  const publicKey = "pk_live_11d6dca05a321327a1bc8ba683255504c9aeada7"; // replace with your key
-  const [email, setEmail] = useState("");
+  const publicKey = "pk_live_11d6dca05a321327a1bc8ba683255504c9aeada7"; // live key
+  const [email, setEmail] = useState(""); // user must fill
   const [amount, setAmount] = useState(250);
   const [name, setName] = useState("");
   const [service, setService] = useState("Graphic Design");
-
-  const componentProps = {
-    email,
-    amount: amount * 100,
-    metadata: { name, service },
-    publicKey,
-    text: `Pay ₵${amount}`,
-    onSuccess: () => alert("Payment successful!"),
-    onClose: () => alert("Payment cancelled."),
-  };
 
   const services = [
     { name: "Graphic Design", price: 250 },
@@ -38,6 +28,16 @@ export default function Payment() {
     const selected = services.find((s) => s.name === service);
     setAmount(selected ? selected.price : 250);
   }, [service]);
+
+  const componentProps = {
+    email,
+    amount: amount * 100, // amount in kobo
+    metadata: { name, service },
+    publicKey,
+    text: Pay ₵${amount},
+    onSuccess: () => alert("Payment successful!"),
+    onClose: () => alert("Payment cancelled."),
+  };
 
   return (
     <div
@@ -86,7 +86,10 @@ export default function Payment() {
           <div className="text-center mt-6">
             <PaystackButton
               {...componentProps}
-              className="w-full bg-[#B08D57] hover:bg-[#7E837D] text-white font-semibold py-3 rounded-full transition-all shadow-lg hover:shadow-xl"
+              className={`w-full bg-[#B08D57] hover:bg-[#7E837D] text-white font-semibold py-3 rounded-full transition-all shadow-lg hover:shadow-xl ${
+                !email || !name ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={!email || !name}
             />
           </div>
         </form>
@@ -97,7 +100,7 @@ export default function Payment() {
           </Link>
         </div>
 
-        {/* ✅ Updated Trust Badges Section */}
+        {/* Trust Badges Section */}
         <div className="mt-10 text-center">
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-2 mb-3">
@@ -146,7 +149,6 @@ export default function Payment() {
             </div>
           </div>
         </div>
-        {/* ✅ End Updated Section */}
       </div>
     </div>
   );
