@@ -11,7 +11,7 @@ const PaystackButton = dynamic(
 );
 
 export default function Payment() {
-  const publicKey = "pk_live_11d6dca05a321327a1bc8ba683255504c9aeada7"; // live key
+  const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY;
   const [email, setEmail] = useState(""); // user must fill
   const [amount, setAmount] = useState(250); // fixed capitalization
   const [name, setName] = useState("");

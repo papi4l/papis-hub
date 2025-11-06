@@ -5,11 +5,12 @@ import Link from "next/link";
 
 export default function Success() {
   const router = useRouter();
+  const { ref, amount } = router.query; // Get transaction info from URL
 
   useEffect(() => {
     const timer = setTimeout(() => {
       router.push("/");
-    }, 7000); // Auto redirect after 7 seconds
+    }, 5000); // Auto redirect after 5 seconds
     return () => clearTimeout(timer);
   }, [router]);
 
@@ -41,6 +42,14 @@ export default function Success() {
         <h1 className="text-2xl font-bold" style={{ color: "#006D77" }}>
           Payment Successful
         </h1>
+
+        {/* Display transaction info */}
+        <p className="mt-2 text-sm text-[#7E837D]">
+          Payment Amount: {amount || "N/A"} GHS
+        </p>
+        <p className="text-sm text-[#7E837D]">
+          Transaction Ref: {ref || "N/A"}
+        </p>
 
         <p className="mt-3 text-sm text-[#7E837D]">
           Thank you — your payment was processed successfully.
