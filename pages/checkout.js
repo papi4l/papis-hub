@@ -1,4 +1,4 @@
-import PayButton from "../components/PayButton";
+import PayButton from "../components/PayButton.js";
 
 export default function Checkout() {
   return (
