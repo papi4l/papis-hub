@@ -1,157 +1,231 @@
-// ...existing code...
 "use client";
-import React, { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 
-// Dynamically import PaystackButton (browser only)
-const PaystackButton = dynamic(
-  () => import("react-paystack").then((mod) => mod.PaystackButton),
-  { ssr: false }
-);
-
 export default function Payment() {
-  const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_KEY;
-  const [email, setEmail] = useState(""); // user must fill
-  const [amount, setAmount] = useState(250); // fixed capitalization
   const [name, setName] = useState("");
-  const [service, setService] = useState("Graphic Design");
+  const [email, setEmail] = useState("");
 
   const services = [
-    { name: "Graphic Design", price: 250 },
-    { name: "Social Media Strategy", price: 400 },
-    { name: "Copywriting", price: 300 },
-    { name: "Data Entry", price: 200 },
-    { name: "Product Sourcing", price: 350 },
+    { id: "graphic", name: "Graphic Design", price: 250 },
+    { id: "social", name: "Social Media Strategy", price: 400 },
+    { id: "copy", name: "Copywriting", price: 300 },
+    { id: "data", name: "Data Entry", price: 200 },
+    { id: "sourcing", name: "Product Sourcing", price: 350 },
   ];
 
-  useEffect(() => {
-    const selected = services.find((s) => s.name === service);
-    setAmount(selected ? selected.price : 250);
-  }, [service]);
+  // default to first service
+  const [selectedServiceId, setSelectedServiceId] = useState(services[0].id);
+  const selectedService =
+    services.find((s) => s.id === selectedServiceId) || services[0];
 
-  // ...existing code...
-  const componentProps = {
-    email,
-    amount: amount * 100, // amount in kobo
-    metadata: { name, service },
-    publicKey,
-    text: `Pay ₵${amount}`,
-    onSuccess: () => {
-      window.location.href = "/success"; // redirect after success
-    },
-    onClose: () => alert("Payment cancelled."),
+  // Amount options (main unit, GHS) — generic options
+  const amountOptions = [250, 300, 400, 200, 350];
+
+  // default amount is the selected service price so service selection and amount stay in sync
+  const [amount, setAmount] = useState(selectedService.price);
+
+  // when the selected service changes, sync the amount to that service's price
+  useEffect(() => {
+    setAmount(selectedService.price);
+  }, [selectedServiceId]); // only sync when service changes
+
+  // update selection and amount (service -> amount)
+  const selectService = (id) => {
+    setSelectedServiceId(id);
+    // amount will be synced by the useEffect above
   };
-  // ...existing code...
+
+  const startPayment = async () => {
+    if (!name.trim() || !email.trim()) {
+      alert("Please enter name and email");
+      return;
+    }
+    try {
+      const resp = await fetch("/api/create-transaction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          amount,
+          // server converts to minor units
+          metadata: { name, service: selectedService.name, serviceId: selectedService.id },
+        }),
+      });
+
+      // Defensive parsing: handle non-JSON errors gracefully
+      const raw = await resp.text();
+      let data;
+      try {
+        data = JSON.parse(raw);
+      } catch (parseErr) {
+        console.error("Invalid JSON response from /api/create-transaction:", raw);
+        alert("Payment initialization failed: invalid server response (check terminal).");
+        return;
+      }
+
+      if (!resp.ok) {
+        console.error("Init failed:", data);
+        alert(data.message || data.error || "Payment initialization failed");
+        return;
+      }
+      const access_code = data?.data?.access_code;
+      if (!access_code) {
+        console.error("No access_code:", data);
+        alert("Payment initialization failed (no access code)");
+        return;
+      }
+      const PaystackPop = (await import("@paystack/inline-js")).default;
+      const popup = new PaystackPop();
+      popup.resumeTransaction(access_code);
+    } catch (err) {
+      console.error("startPayment error:", err);
+      alert("An error occurred while starting payment.");
+    }
+  };
+
+  // Build amount select options: include the selected service price first if it's not among the generic options
+  const buildAmountSelectOptions = () => {
+    const opts = [...amountOptions];
+    if (!opts.includes(selectedService.price)) {
+      // place the service price first so it's visible/selected when a service is chosen
+      return [selectedService.price, ...opts];
+    }
+    return opts;
+  };
+
+  const renderedAmountOptions = buildAmountSelectOptions();
 
   return (
     <div
-      className="min-h-screen flex flex-col justify-center items-center p-6"
-      style={{
-        background: "linear-gradient(135deg, #006D77 0%, #F7F3EB 100%)",
-      }}
+      className="min-h-screen flex items-center justify-center p-6"
+      style={{ background: "linear-gradient(135deg,#006D77 0%,#F7F3EB 100%)" }}
     >
-      <div className="max-w-md w-full bg-[rgba(255,255,255,0.85)] backdrop-blur-md shadow-2xl rounded-2xl p-8 border border-[#B08D57]/40">
-        <h1
-          className="text-3xl font-bold mb-6 text-center"
-          style={{ color: "#006D77" }}
-        >
-          Secure Payment
-        </h1>
+      <div className="max-w-3xl w-full grid grid-cols-1 md:grid-cols-2 gap-6 p-8 bg-[rgba(255,255,255,0.95)] rounded-2xl shadow">
+        <div>
+          <h2 className="text-xl font-bold mb-4" style={{ color: "#006D77" }}>
+            Choose a service
+          </h2>
 
-        <form className="space-y-4">
-          <input
-            type="text"
-            placeholder="Full Name"
-            className="w-full p-3 rounded-lg border border-[#B08D57]/30 focus:ring-2 focus:ring-[#B08D57] outline-none"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="w-full p-3 rounded-lg border border-[#B08D57]/30 focus:ring-2 focus:ring-[#B08D57] outline-none"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-
-          <select
-            className="w-full p-3 rounded-lg border border-[#B08D57]/30 focus:ring-2 focus:ring-[#B08D57] outline-none"
-            value={service}
-            onChange={(e) => setService(e.target.value)}
-          >
-            {services.map((s) => (
-              <option key={s.name} value={s.name}>
-                {s.name} — ₵{s.price}
-              </option>
-            ))}
-          </select>
-
-          <div className="text-center mt-6">
-            <PaystackButton
-              {...componentProps}
-              className={`w-full bg-[#B08D57] hover:bg-[#7E837D] text-white font-semibold py-3 rounded-full transition-all shadow-lg hover:shadow-xl ${
-                !email || !name ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              disabled={!email || !name}
-            />
+          {/* Service select (keeps your previous behavior) */}
+          <div className="mb-4">
+            <label htmlFor="serviceSelect" className="block mb-2 font-medium">
+              Select service
+            </label>
+            <select
+              id="serviceSelect"
+              value={selectedServiceId}
+              onChange={(e) => selectService(e.target.value)}
+              className="w-full p-3 border rounded"
+            >
+              {services.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} — ₵{s.price}
+                </option>
+              ))}
+            </select>
           </div>
-        </form>
 
-        <div className="text-center mt-6">
-          <Link href="/" className="text-[#006D77] hover:underline text-sm">
-            ← Back Home
-          </Link>
-        </div>
+          {/* Amount select: user can choose options, but it will sync to the service price when a service is selected.
+              Also, when an amount matching a service price is selected, the service selection will update to that service. */}
+          <div className="mb-4">
+            <label htmlFor="amountSelect" className="block mb-2 font-medium">
+              Amount (GHS)
+            </label>
+            <select
+              id="amountSelect"
+              value={amount}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                setAmount(val);
+                // If chosen amount matches a service price, select that service so both controls stay in sync
+                const matchingService = services.find((s) => s.price === val);
+                if (matchingService) {
+                  setSelectedServiceId(matchingService.id);
+                }
+                // If no matching service, keep the current service selection unchanged.
+              }}
+              className="w-full p-3 border rounded"
+            >
+              {renderedAmountOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  ₵{opt}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Trust Badges Section */}
-        <div className="mt-10 text-center">
-          <div className="flex flex-col items-center">
-            <div className="flex items-center gap-2 mb-3">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="#B08D57"
-                viewBox="0 0 24 24"
-                stroke="#B08D57"
-                strokeWidth={1.5}
-                className="w-5 h-5"
+          {/* Optional visual list with radios (kept in case you want both UI patterns) */}
+          <div className="space-y-3">
+            {services.map((s) => (
+              <label
+                key={s.id}
+                className={`flex items-center justify-between p-3 border rounded cursor-pointer transition ${
+                  selectedServiceId === s.id
+                    ? "border-[#B08D57] bg-[#fffaf2]"
+                    : "border-gray-200 hover:shadow-sm"
+                }`}
+                onClick={() => selectService(s.id)}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 11c0-1.657-1.343-3-3-3S6 9.343 6 11v2h6v-2zM4 13v-2a5 5 0 0110 0v2m1 0h5a2 2 0 012 2v5a2 2 0 01-2 2H4a2 2 0 01-2-2v-5a2 2 0 012-2h5z"
-                />
-              </svg>
-              <span className="text-[#7E837D] text-sm font-medium">
-                Verified & Encrypted — Powered by Paystack
-              </span>
-            </div>
-
-            <div className="flex justify-center gap-4 flex-wrap mt-2">
-              {[
-                { src: "/trust/visa.png", alt: "Visa" },
-                { src: "/trust/mastercard.png", alt: "Mastercard" },
-                { src: "/trust/paystack.png", alt: "Paystack" },
-                { src: "/trust/ssl-secure.png", alt: "SSL Secured" },
-              ].map((badge) => (
-                <div
-                  key={badge.alt}
-                  className="bg-white/80 border border-[#B08D57]/30 rounded-lg p-2 shadow-sm hover:shadow-md transition-all transform hover:-translate-y-1"
-                >
-                  <img
-                    src={badge.src}
-                    alt={badge.alt}
-                    className="h-7 w-auto opacity-90 hover:opacity-100 transition-opacity"
+                <div>
+                  <div className="font-medium">{s.name}</div>
+                  <div className="text-sm text-gray-500">Service</div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="font-semibold">₵{s.price}</div>
+                  <input
+                    type="radio"
+                    name="service"
+                    checked={selectedServiceId === s.id}
+                    onChange={() => selectService(s.id)}
+                    className="w-4 h-4"
                   />
                 </div>
-              ))}
-            </div>
+              </label>
+            ))}
+          </div>
+        </div>
 
-            <div className="flex items-center gap-2 mt-4 text-xs text-[#7E837D]">
-              <div className="w-2 h-2 bg-[#B08D57] rounded-full animate-ping"></div>
-              <span>100% Secure Checkout — SSL Encrypted & Verified</span>
+        <div>
+          <h2 className="text-xl font-bold mb-4" style={{ color: "#006D77" }}>
+            Your details & payment
+          </h2>
+
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Full name"
+            className="w-full mb-3 p-3 border rounded"
+          />
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+            className="w-full mb-3 p-3 border rounded"
+          />
+
+          <div className="mb-4 p-3 border rounded bg-white">
+            <div className="flex justify-between mb-1">
+              <span className="text-sm text-gray-600">Selected</span>
+              <span className="text-sm text-gray-600">{selectedService.name}</span>
             </div>
+            <div className="flex justify-between items-center">
+              <div className="text-lg font-bold">Total</div>
+              <div className="text-2xl font-extrabold">₵{amount}</div>
+            </div>
+          </div>
+
+          <button
+            onClick={startPayment}
+            className="w-full bg-[#B08D57] text-white py-3 rounded-full font-semibold"
+          >
+            Pay Now
+          </button>
+
+          <div className="mt-4 text-center">
+            <Link href="/" className="text-[#006D77] hover:underline text-sm">
+              ← Back Home
+            </Link>
           </div>
         </div>
       </div>
