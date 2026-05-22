@@ -1,19 +1,23 @@
-# Papi's Hub
+# Hi, I'm Terry 👋
 
-Personal portfolio website built with Next.js and deployed on Vercel.
+Linguistics student and Full-Stack Python Developer passionate about building practical web applications and solving real-world problems through technology.
 
-## Features
-- Responsive design
-- Service showcase
-- Portfolio section
-- Contact page
-- Responsive payment page
-
-## Tech Stack
-- Next.js
-- React
+## Technologies
+- Python
+- HTML
 - CSS
-- Vercel
+- JavaScript
+- React
+- Next.js
+- Git & GitHub
 
-## Live Demo
-https://papis-hub.vercel.app
+## Current Focus
+- Full-Stack Development
+- Backend Development with Python
+- Building scalable web applications
+
+## Projects
+- Papi's Hub: https://papis-hub.vercel.app
+
+## Contact
+- GitHub: https://github.com/papi4l
